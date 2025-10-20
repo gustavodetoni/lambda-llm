@@ -1,0 +1,27 @@
+{
+  "name": "lambda-process-transcription",
+  "version": "1.0.0",
+  "main": "lambda.js",
+  "scripts": {
+    "build": "esbuild src/handler.ts --bundle --platform=node --target=node20 --outfile=dist/handler.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Gustavo Detoni Pimentel",
+    "email": "gustavodetoni2407@gmail.com"
+  },
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
+    "openai": "^6.1.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.155",
+    "@types/node": "^24.6.2",
+    "esbuild": "^0.25.10"
+  }
+}
