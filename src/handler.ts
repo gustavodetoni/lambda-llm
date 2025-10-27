@@ -20,6 +20,7 @@ export const handler: SQSHandler = async (event) => {
         transcription,
         duration,
         language,
+        status,
       } = message;
 
       console.log(
@@ -63,6 +64,7 @@ export const handler: SQSHandler = async (event) => {
 
         INSTRUÇÕES PARA O NOME:
         - Gere um título curto e neutro que represente o tema central do áudio.
+        - Minímo 4 palavras máximo 10 palavras, título deve resumir a conversa, não pode ser muito genéric.
         - Se o conteúdo for confuso, gere um nome curto que resuma o assunto principal da conversa, mesmo que não tenha ficado totalmente claro.
         - Mesmo que o diálogo esteja confuso, tente resumir o assunto principal.
         - Evite usar "Título não aplicável" a menos que o áudio seja vazio ou sem fala compreensível.
@@ -89,14 +91,14 @@ export const handler: SQSHandler = async (event) => {
         - O JSON deve estar **puro**, começando com { e terminando com }.
         - Exemplo correto:
           {
-            "nome": "Solicitação de reembolso",
-            "categoria": "Atendimento"
+            "title": "Solicitação de reembolso",
+            "category": "Atendimento"
           }
         - Exemplo incorreto (NÃO FAÇA):
           Aqui está o resultado:
            {
-             "nome": "Solicitação de reembolso",
-             "categoria": "Atendimento"
+             "title": "Solicitação de reembolso",
+             "category": "Atendimento"
             }
           O motivo é que...
       `;
@@ -113,7 +115,9 @@ export const handler: SQSHandler = async (event) => {
       const start = Date.now();
 
       const model = process.env.MODEL_OPENAI;
-      if (!model) throw new Error("Missing MODEL_OPENAI");
+      if (!model) {
+        throw new Error("Missing MODEL_OPENAI");
+      }
 
       const response = await openai.chat.completions.create({
         model,
@@ -138,23 +142,22 @@ export const handler: SQSHandler = async (event) => {
             jsonMatch[0],
           );
           parsed = {
-            nome: "Título não aplicável",
-            categoria: "Nenhuma se aplica",
+            title: "Título não aplicável",
+            category: "Nenhuma se aplica",
           };
         }
       } else {
         console.warn("Nenhum JSON detectado na resposta da LLM");
         parsed = {
-          nome: "Título não aplicável",
-          categoria: "Nenhuma se aplica",
+          tile: "Título não aplicável",
+          category: "Nenhuma se aplica",
         };
       }
 
       const result = {
-        userId,
-        squadId,
         transcriptionId,
         duration,
+        status: "COMPLETED",
         ...parsed,
       };
 
@@ -170,7 +173,9 @@ export const handler: SQSHandler = async (event) => {
       );
 
       const webhook = process.env.WEBHOOK_URL;
-      if (!webhook) throw new Error("Missing WEBHOOK_URL");
+      if (!webhook) {
+        throw new Error("Missing WEBHOOK_URL");
+      }
 
       const webhookSecret = process.env.WEBHOOK_SECRET;
 

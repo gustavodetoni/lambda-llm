@@ -20957,7 +20957,8 @@ var handler = async (event) => {
         categories,
         transcription,
         duration,
-        language
+        language,
+        status
       } = message;
       console.log(
         JSON.stringify({
@@ -20996,6 +20997,7 @@ var handler = async (event) => {
 
         INSTRU\xC7\xD5ES PARA O NOME:
         - Gere um t\xEDtulo curto e neutro que represente o tema central do \xE1udio.
+        - Min\xEDmo 4 palavras m\xE1ximo 10 palavras, t\xEDtulo deve resumir a conversa, n\xE3o pode ser muito gen\xE9ric.
         - Se o conte\xFAdo for confuso, gere um nome curto que resuma o assunto principal da conversa, mesmo que n\xE3o tenha ficado totalmente claro.
         - Mesmo que o di\xE1logo esteja confuso, tente resumir o assunto principal.
         - Evite usar "T\xEDtulo n\xE3o aplic\xE1vel" a menos que o \xE1udio seja vazio ou sem fala compreens\xEDvel.
@@ -21022,14 +21024,14 @@ var handler = async (event) => {
         - O JSON deve estar **puro**, come\xE7ando com { e terminando com }.
         - Exemplo correto:
           {
-            "nome": "Solicita\xE7\xE3o de reembolso",
-            "categoria": "Atendimento"
+            "title": "Solicita\xE7\xE3o de reembolso",
+            "category": "Atendimento"
           }
         - Exemplo incorreto (N\xC3O FA\xC7A):
           Aqui est\xE1 o resultado:
            {
-             "nome": "Solicita\xE7\xE3o de reembolso",
-             "categoria": "Atendimento"
+             "title": "Solicita\xE7\xE3o de reembolso",
+             "category": "Atendimento"
             }
           O motivo \xE9 que...
       `;
@@ -21043,7 +21045,9 @@ var handler = async (event) => {
       );
       const start = Date.now();
       const model = process.env.MODEL_OPENAI;
-      if (!model) throw new Error("Missing MODEL_OPENAI");
+      if (!model) {
+        throw new Error("Missing MODEL_OPENAI");
+      }
       const response = await openai.chat.completions.create({
         model,
         messages: [{ role: "user", content: prompt }],
@@ -21063,22 +21067,21 @@ var handler = async (event) => {
             jsonMatch[0]
           );
           parsed = {
-            nome: "T\xEDtulo n\xE3o aplic\xE1vel",
-            categoria: "Nenhuma se aplica"
+            title: "T\xEDtulo n\xE3o aplic\xE1vel",
+            category: "Nenhuma se aplica"
           };
         }
       } else {
         console.warn("Nenhum JSON detectado na resposta da LLM");
         parsed = {
-          nome: "T\xEDtulo n\xE3o aplic\xE1vel",
-          categoria: "Nenhuma se aplica"
+          tile: "T\xEDtulo n\xE3o aplic\xE1vel",
+          category: "Nenhuma se aplica"
         };
       }
       const result = {
-        userId,
-        squadId,
         transcriptionId,
         duration,
+        status: "COMPLETED",
         ...parsed
       };
       console.log(
@@ -21092,7 +21095,9 @@ var handler = async (event) => {
         })
       );
       const webhook = process.env.WEBHOOK_URL;
-      if (!webhook) throw new Error("Missing WEBHOOK_URL");
+      if (!webhook) {
+        throw new Error("Missing WEBHOOK_URL");
+      }
       const webhookSecret = process.env.WEBHOOK_SECRET;
       await axios_default.post(webhook, result, {
         headers: {
